@@ -165,6 +165,10 @@ paginate(currentPage, PAGE_SIZE, pokemons);
         `);
   });
 
- //
+ $('body').on('click', '#numberedButtons, #previousButton, #nextButton', async function (e) {
+  currentPage = Number(e.target.value);
+  paginate(currentPage, PAGE_SIZE, pokemons);
+  updatePaginationDiv(currentPage, numPages);
+});
 };
 $(document).ready(setup);
