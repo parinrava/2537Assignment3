@@ -56,13 +56,78 @@ const createTypeFilterCheckboxes = () => {
   });
 };
 
+// retrieves its associated types,checks if any of those types match the selected types, and shows or hides the card
+const applyTypeFilter = async (selectedTypes) => {
+  //selects all elements with the class 'pokeCard' and iterates over them using the .each()
+  
+  $('.pokeCard').each(function () {
+    //retrieves the 'poketypes' attribute of the current card using the $(this) selector.
+    //parse the attribute value into an actual array
+    const cardTypes = JSON.parse($(this).attr('poketypes'));
+    //checks if any of the types in the cardTypes array are included in the selectedTypes array.
+    // iterate over the cardTypes array and returns true if at least one of the types matches a selected type
+    const hasSelectedType = cardTypes.some((type) => selectedTypes.includes(type));
+
+    if (hasSelectedType) {
+      $(this).show();
+    } else {
+      $(this).hide();
+    }
+  });
+};
+
+const setupTypeFilterCheckboxes = () => {
+  $('body').on('change', '.typeCheckbox', function () {
+    const selectedTypes = $('.typeCheckbox:checked')
+      .toArray()
+      .map((checkbox) => checkbox.value);
+    applyTypeFilter(selectedTypes);
+  });
+};
+
+//displaying a subset of Pokemon cards based on the current page and page size
+const paginate = async (currentPage, PAGE_SIZE, pokemons) => {
+  // extract a portion of the pokemons array based on the current page and page size
+  const selectedPokemons = pokemons.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+  
+  //to update the display count of Pokemon cards.
+  displayPokemonCount(pokemons.length, selectedPokemons.length);
+
+  $('#pokeCards').empty();
+  selectedPokemons.forEach(async (pokemon) => {
+    //retrieve the detailed information for that Pokemon
+    const res = await axios.get(pokemon.url);
+    const types = res.data.types.map((type) => type.type.name);
+
+    //pokeTypes attribute is set to a JSON-encoded string representing the array of Pokemon types.
+    $('#pokeCards').append(`
+      <div class="pokeCard card" pokeName="${res.data.name}" pokeTypes='${JSON.stringify(types)}'>
+        <h3>${res.data.name.toUpperCase()}</h3> 
+        <img src="${res.data.sprites.front_default}" alt="${res.data.name}"/>
+        <button type="button" class="btn btn-primary " data-bs-toggle="modal" data-bs-target="#pokeModal">
+          More info
+        </button>
+      </div>
+    `);
+  });
+};
+
 
 
 const setup = async () => {
   $('#pokeCards').empty();
   const response = await axios.get('https://pokeapi.co/api/v2/pokemon?offset=0&limit=810');
   pokemons = response.data.results;
-//
+await fetchPokemonTypes();
+createTypeFilterCheckboxes();
+setupTypeFilterCheckboxes();
+
+paginate(currentPage, PAGE_SIZE, pokemons);
+  const numPages = Math.ceil(pokemons.length/ PAGE_SIZE);
+  updatePaginationDiv(currentPage, numPages);
   
   $('body').on('click', '.pokeCard', async function (e) {
     const pokemonName = $(this).attr('pokeName');
