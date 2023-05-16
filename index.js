@@ -38,6 +38,24 @@ const displayPokemonCount = (totalPokemon, displayedPokemon) => {
   `);
 };
 
+//pokemon different types, the types name get to saved in the pokemonType
+const fetchPokemonTypes = async () => {
+  const response = await axios.get('https://pokeapi.co/api/v2/type');
+  pokemonTypes = response.data.results.map((type) => type.name);
+};
+
+//filter checkbox for types, 
+const createTypeFilterCheckboxes = () => {
+  pokemonTypes.forEach((type) => {
+    $('#typeFilter').append(`
+      <div class="form-check form-check-inline">
+        <input class="form-check-input typeCheckbox" type="checkbox" value="${type}" id="${type}">
+        <label class="form-check-label" for="${type}">${type}</label>
+      </div>
+    `);
+  });
+};
+
 
 
 const setup = async () => {
